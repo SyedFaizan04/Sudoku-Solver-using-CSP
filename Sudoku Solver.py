@@ -1,5 +1,10 @@
 import tkinter as tk
+from tkinter import messagebox
 import numpy as np
+
+entries = []
+display = []
+values = np.zeros((9, 9), dtype=int)
 
 def solve_sudoku(board):
     empty_cell = find_empty_cell(board)
@@ -51,19 +56,57 @@ def is_valid_move(board, row, col, num):
         check_subgrid_constraint(board, row, col, num)
     )
 
-entries = []
-display = []
-values = np.zeros((9, 9), dtype=int)
+
+def initial_row_constraint(arr):
+    for i in range(9):
+        seen = set()
+        for j in range(9):
+            if arr[i, j] != 0:
+                if arr[i, j] in seen:
+                    return False
+                seen.add(arr[i, j])
+    return True
+
+def initial_column_constraint(arr):
+    for j in range(9):
+        seen = set()
+        for i in range(9):
+            if arr[i, j] != 0:
+                if arr[i, j] in seen:
+                    return False
+                seen.add(arr[i, j])
+    return True
+
+def initial_subgrid_constraint(arr):
+    for row in range(0, 9, 3):
+        for col in range(0, 9, 3):
+            seen = set()
+            for i in range(row, row + 3):
+                for j in range(col, col + 3):
+                    if arr[i, j] != 0:
+                        if arr[i, j] in seen:
+                            return False
+                        seen.add(arr[i, j])
+    return True
+
+
+def is_valid_board(board, row, col):
+    return (
+        initial_row_constraint(board) and
+        initial_column_constraint(board) and
+        initial_subgrid_constraint(board)
+    )
+
 main = tk.Tk()
 main.title("Sudoku Puzzle Solver")
 
 font_config = ("Calibri", 12, "bold")
 font_config2 = ("Calibri", 14, "bold")
-bg_color = "gray"  
-entry_bg_color = "white"  
-entry_fg_color = "black"  
-readonly_bg_color = "#333333"  # Grey 
-label_bg_color = "Navy blue"  
+bg_color = "gray"
+entry_bg_color = "white"
+entry_fg_color = "black"
+readonly_bg_color = "#333333"  # Grey
+label_bg_color = "Navy blue"
 label_fg_color = "#FFFFFF"  # White
 button_bg_color = "#00FF00"  # Green
 button_fg_color = "#000000"  # Black
@@ -79,15 +122,19 @@ def Solve():
             except ValueError:
                 values[row][col] = 0
 
-    if solve_sudoku(values):
-        for row in range(9):
-            for col in range(9):
-                display[row][col].config(state='normal')
-                display[row][col].delete(0, tk.END)
-                display[row][col].insert(0, str(values[row][col]))
-                display[row][col].config(state='readonly')
+    valid = is_valid_board(values, 0, 0)
+    if valid:
+        if solve_sudoku(values):
+            for row in range(9):
+                for col in range(9):
+                    display[row][col].config(state='normal')
+                    display[row][col].delete(0, tk.END)
+                    display[row][col].insert(0, str(values[row][col]))
+                    display[row][col].config(state='readonly')
+        # else:
+            # messagebox.showerror("Error", "An error has occurred!")
     else:
-        print("No solution exists.")
+        messagebox.showerror("Error", "No Soultion Exists!")
 
 label = tk.Label(main, text="Enter Unsolved Puzzle", font=font_config, bg=label_bg_color, fg=label_fg_color)
 label.grid(row=0, column=2, columnspan=5, pady=10)
@@ -115,4 +162,3 @@ for i in range(9):
     display.append(row)
 
 main.mainloop()
-
